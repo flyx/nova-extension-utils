@@ -174,12 +174,16 @@
         
         ## Testing in Nova
         
-        Once you have set up everything, do a `nix build`.
+        Once you have set up everything, do a `nix build --impure`.
         You will get a folder `result` containing your extension.
         Open the extension in a new Nova window from the context menu.
         There you can activate your extension.
         
         Mind that a rebuild will create a different folder (`result` is a symlink) and you need to re-open the testing window after changing stuff.
+        
+        ## More Information
+        
+        Refer to the [documentation](https://github.com/flyx/nova-extension-utils/blob/master/docs/Documentation.md).
       '';
     };
   };
