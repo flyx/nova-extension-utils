@@ -95,14 +95,31 @@
         derivationParams ? {},
         # additional attributes get put into the extension.json file
         ...
-      }@args: final.stdenvNoCC.mkDerivation ({
+      }@args: let
+        genConfigItem = workspace: name: value: {
+          key = identifier + "." + name;
+        } // (if value.type == "section" then ((builtins.removeAttrs value [ "children"]) // {
+          children = final.lib.mapAttrsToList genConfigItem value.children;
+        }) else (if workspace then (builtins.removeAttrs value [ "default" ]) else value));
+        configJson = final.lib.mapAttrsToList (genConfigItem false) config;
+        workspaceConfigJson = (final.lib.mapAttrsToList (genConfigItem true) config) ++ (final.lib.mapAttrsToList (genConfigItem false) workspaceConfig);
+      in final.stdenvNoCC.mkDerivation ({
         inherit src pname version;
-        CONFIG_JSON = builtins.toJSON ((
-          builtins.removeAttrs args [ "pname" "treeSitteLibs" "config" "workspaceConfig" "src" "derivationParams" ]
+        EXTENSION_JSON = builtins.toJSON ((
+          builtins.removeAttrs args [
+            "pname" "treeSitteLibs" "config" "workspaceConfig"
+            "src" "derivationParams" "config" "workspaceConfig"
+          ]
         ) // {
-          inherit config workspaceConfig;
+          config = configJson;
+          workspaceConfig = workspaceConfigJson;
           name = pname;
         });
+        CONFIG_JS = import ./Scripts/config.nix {
+          inherit (final) lib;
+          inherit config;
+          basePath = identifier;
+        };
         
         installPhase = ''
           runHook preInstall
@@ -113,11 +130,16 @@
             if [[ -d "$f" ]]; then cp -r "$f" $extDir; fi
           done
           shopt -u nullglob
-          printenv CONFIG_JSON >$out/${pname}.novaextension/extension.json
-          mkdir -p $extDir/Syntaxes
+          printenv EXTENSION_JSON >$extDir/extension.json
+          mkdir -p $extDir/Syntaxes $extDir/Scripts
           ${final.lib.concatStrings (
-            builtins.map (tsl: "cp ${tsl} $extDir/Syntaxes/libtree-sitter-${tsl.langName}.dylib") treeSitterLibs
+            builtins.map (tsl: "cp ${tsl} $extDir/Syntaxes/libtree-sitter-${tsl.langName}.dylib\n") treeSitterLibs
           )}
+          ${if builtins.length (builtins.attrValues config) > 0 then ''
+            cp ${self}/Scripts/config-item.js $extDir/Scripts
+            printenv CONFIG_JS >$extDir/Scripts/config.js
+          '' else ""}
+          cp ${self}/Scripts/language-server.js $extDir/Scripts
           runHook postInstall
         '';
       } // derivationParams);
