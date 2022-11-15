@@ -1,14 +1,13 @@
 {
   inputs = {
-    nixpkgs.url = github:NixOS/nixpkgs/nixos-22.05;
-    utils.url   = github:numtide/flake-utils;
+    utils.url   = "github:numtide/flake-utils";
     nova        = {
       url   = "https://download.panic.com/nova/Nova%2010.zip";
       flake = false;
     };
   };
   outputs = {
-    self, nixpkgs, utils, nova
+    self, utils, nova
   }: {
     overlays.default = final: prev: {
       buildNovaTreeSitterLib = {
@@ -18,7 +17,7 @@
         src,
         # relative path in `src` that contains `parser.c` and possibly `scanner.c`
         srcPath ? "src"
-      }@args: final.stdenvNoCC.mkDerivation {
+      }: final.stdenvNoCC.mkDerivation {
         name = "nova-tree-sitter-${langName}-dylib";
         inherit src srcPath;
         passthru = { inherit langName; };
@@ -90,7 +89,7 @@
         # configuration options of your extension
         config ? {},
         # workspace-only configuration options
-        workspaceConfig ? {},
+        configWorkspace ? {},
         # additional parameters to mkDerivation
         derivationParams ? {},
         # additional attributes get put into the extension.json file
@@ -100,9 +99,13 @@
           key = identifier + "." + name;
         } // (if value.type == "section" then ((builtins.removeAttrs value [ "children"]) // {
           children = final.lib.mapAttrsToList genConfigItem value.children;
-        }) else (if workspace then (builtins.removeAttrs value [ "default" ]) else value));
+        }) else (if workspace then (
+          (builtins.removeAttrs value [ "default" "required" ]) // {
+            required = false;
+          } 
+        ) else value));
         configJson = final.lib.mapAttrsToList (genConfigItem false) config;
-        workspaceConfigJson = (final.lib.mapAttrsToList (genConfigItem true) config) ++ (final.lib.mapAttrsToList (genConfigItem false) workspaceConfig);
+        workspaceConfigJson = (final.lib.mapAttrsToList (genConfigItem true) config) ++ (final.lib.mapAttrsToList (genConfigItem false) configWorkspace);
       in final.stdenvNoCC.mkDerivation ({
         inherit src pname version;
         EXTENSION_JSON = builtins.toJSON ((
@@ -112,7 +115,7 @@
           ]
         ) // {
           config = configJson;
-          workspaceConfig = workspaceConfigJson;
+          configWorkspace = workspaceConfigJson;
           name = pname;
         });
         CONFIG_JS = import ./Scripts/config.nix {
@@ -129,6 +132,11 @@
           for f in Syntaxes Scripts Images Themes Completions Queries *.lproj; do
             if [[ -d "$f" ]]; then cp -r "$f" $extDir; fi
           done
+          if [[ -f Readme-user.md ]]; then
+            cp Readme-user.md $extDir/Readme.md
+          elif [[ -f Readme.md ]]; then
+            cp Readme.md $extDir/Readme.md
+          fi
           shopt -u nullglob
           printenv EXTENSION_JSON >$extDir/extension.json
           mkdir -p $extDir/Syntaxes $extDir/Scripts
@@ -143,6 +151,36 @@
           runHook postInstall
         '';
       } // derivationParams);
+    };
+    templates.default = {
+      path = ./template;
+      description = "A Nova extension with a TreeSitter syntax and a language server";
+      welcomeText = ''
+        # A Nova extension has been initialized!
+        ## First steps
+        
+        Edit `flake.nix` to your liking.
+        You want to change the tree sitter grammar URL, and all metadata.
+        
+        `Scripts/main.js` starts your language server.
+        You can of course do other things in there, or remove it if you don't need it.
+        
+        `Syntaxes/MyLanguage.xml` should reference your TreeSitter syntax.
+        Consult the docs for other data you want to put in there.
+        
+        `Queries/highlights.scm` are highlighting queries for your syntax.
+        It's empty now.
+        Usually existing grammars provide these, but you need to adapt them for Nova.
+        
+        ## Testing in Nova
+        
+        Once you have set up everything, do a `nix build`.
+        You will get a folder `result` containing your extension.
+        Open the extension in a new Nova window from the context menu.
+        There you can activate your extension.
+        
+        Mind that a rebuild will create a different folder (`result` is a symlink) and you need to re-open the testing window after changing stuff.
+      '';
     };
   };
 }

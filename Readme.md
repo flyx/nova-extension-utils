@@ -15,18 +15,18 @@ The general workflow for a Nova extension built with nova-extension-utils is as 
  * In `flake.nix`, you can instruct nix to compile tree sitter grammars (optional).
  * Also in `flake.nix`, you define the contents of your extension's `extension.json`.
  * nova-extension-utils will automatically recognize relevant folders in your repository (`Syntaxes`, `Scripts`, `Images`, …).
+   `Readme-user.md` or, if this doesn't exist, `Readme.md`, are copied into the generated extension as Readme file.
  * Via `nix build`, you can build your extension, giving you `result/<name>.novaextension`.
  * For testing, you can open `result/<name>.novaextension` in a separate Nova window and enable it locally from there.
  * Also from there, you can publish your extension.
 
 ## Documentation
 
-TODO
+See [Documentation](docs/Documentation.md).
 
 ## License
 
-MIT
-
+[MIT](License.md)
 
 
  [1]: https://nixos.wiki/wiki/Flakes

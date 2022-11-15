@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<syntax name="myLanguage">
+    <meta>
+        <name>MyLanguage</name>
+        <type>structured</type>
+        <preferred-file-extension>myl</preferred-file-extension>
+    </meta>
+    
+    <!-- see the official docs for things to put in here -->
+    
+    <!-- requires that you have set langName in `buildNovaTreeSitterLib`
+         to the syntaxes' `name` attribute. -->
+    <tree-sitter>
+        <highlights />
+        <!-- another thing you likely want are folds.
+             existing syntaxes usually provide these and you just need to
+             modify them for Nova. -->
+    </tree-sitter>
+</syntax>
