@@ -41,10 +41,8 @@ class Formatter {
   
   dispose() {
     this.command.dispose();
-    this.teCallback.dispose();
-    for (const callback of this.callback) callback.dispose();
+    for (const callback of this.callbacks) callback.dispose();
     this.command = undefined;
-    this.teCallback = undefined;
     this.callbacks = [];
   }
   
