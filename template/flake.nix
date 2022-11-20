@@ -33,7 +33,7 @@
     packages.default = pkgs.buildNovaExtension {
       src = self;
       # These are example values, change them
-      pname = "MyExtensionName";
+      name = "My Extension";
       version = "1.0.0";
       identifier = "org.example.myExtension";
       organization = "Example Corp";

@@ -55,13 +55,11 @@ A Nova extension contains an `extension.json` that will define the extension's m
 `buildNovaExtension` autogenerates this file from the arguments you provide.
 Required are only the following:
 
- * `pname`: The name of your extension. A name of `Foo` will generate `Foo.novaextension`.
-   Corresponds to the `name` in the manifest (`pname` is a Nix convention).
  * `src` are the sources from which the extension should be generated.
    Usually this is `self`, which points to the content of your Flake.
  * `identifier` is the unique identifier as required by the manifest.
    This will also be used as base for the keys of all configuration items.
- * The items `version`, `organization`, `description`, `categories` and `license` as required by the manifest.
+ * The items `name` `version`, `organization`, `description`, `categories` and `license` as required by the manifest.
  
 Optionally, you can set `treeSitterLibs` to the list of syntaxes you want to use.
 Each syntax must have been created via `buildNovaTreeSitterLib`.

@@ -62,8 +62,8 @@
       };
     
       buildNovaExtension = {
-        # name of your extension (without .novaextension)
-        pname,
+        # user-facing name of your extension
+        name,
         # version of the extension
         version,
         # sources of your extension
@@ -100,17 +100,18 @@
         ) else value));
         configJson = final.lib.mapAttrsToList (genConfigItem false) config;
         workspaceConfigJson = (final.lib.mapAttrsToList (genConfigItem true) config) ++ (final.lib.mapAttrsToList (genConfigItem false) configWorkspace);
+        pname = final.lib.strings.sanitizeDerivationName name;
       in final.stdenvNoCC.mkDerivation ({
         inherit src pname version;
         EXTENSION_JSON = builtins.toJSON ((
           builtins.removeAttrs args [
-            "pname" "treeSitteLibs" "config" "workspaceConfig"
+            "name" "treeSitteLibs" "config" "workspaceConfig"
             "src" "derivationParams" "config" "workspaceConfig"
           ]
         ) // {
+          inherit name;
           config = configJson;
           configWorkspace = workspaceConfigJson;
-          name = pname;
         });
         CONFIG_JS = import ./Scripts/config.nix {
           inherit (final) lib;
