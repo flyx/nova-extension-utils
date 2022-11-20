@@ -142,6 +142,7 @@
             elif [[ -f Readme.md ]]; then
               cp Readme.md $extDir/Readme.md
             fi
+            cp Changelog.md $extDir/Changelog.md
             shopt -u nullglob
             printenv EXTENSION_JSON >$extDir/extension.json
             mkdir -p $extDir/Syntaxes $extDir/Scripts
