@@ -1,36 +1,19 @@
 {
   "nodes": {
-    "nixpkgs": {
-      "locked": {
-        "lastModified": 1668189330,
-        "narHash": "sha256-1JrW+omJ+LguAu9TZgumJ39e28Ratpww8dpsnX3tGqs=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "cb8d3fe07d3592e5d846bce5f7cb5397efe6b206",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixos-22.05",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "nova": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-+Fyalty0qmN/sipAtavW5Z5bXEef4YBzNUHrzwxVGoU=",
+        "narHash": "sha256-y9PPIABEp0rhaP2KkrYO3aEpVSCvA6L2V2dBuzDoabc=",
         "type": "tarball",
-        "url": "https://download.panic.com/nova/Nova%2010.zip"
+        "url": "https://download.panic.com/nova/Nova%2010.3.zip"
       },
       "original": {
         "type": "tarball",
-        "url": "https://download.panic.com/nova/Nova%2010.zip"
+        "url": "https://download.panic.com/nova/Nova%2010.3.zip"
       }
     },
     "root": {
       "inputs": {
-        "nixpkgs": "nixpkgs",
         "nova": "nova",
         "utils": "utils"
       }

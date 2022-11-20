@@ -159,6 +159,33 @@ This way, the user can set a global default and override it if necessary per wor
 
 The language server starts automatically and will restart when the configuration value changes.
 
+## Formatter
+
+The class `Formatter` lets you define a command for formatting your code, using an external utility:
+
+```javascript
+const Formatter = require("fomatter.js").Formatter;
+let formatter = new Formatter(
+  // identifier used for the formatter (to invoke it explicitly from the menu)
+  "org.example.myFormatter",
+  // can be a string or a ConfigItem that defines the path of the
+  // external utility doing the formatting. Typically this would be the name of
+  // the executable, whose absolute path will be queried from the PATH env variable.
+  config.formatterPath,
+  // arguments to the utility. These must configure the utility to take input
+  // from stdin and write output to stdout. May be a ConfigItem.
+  [ "fmt", "--stdio" ],
+  // syntaxes this formatter handles.
+  [ "myLanguage" ],
+  // ConfigItem that specifies whether documents are auto-formatted before saving.
+  // The formatter will listen to changes of the ConfigItem and react accordingly.
+  // may be null or undefined to disable automatic formatting.
+  config.formatOnSave
+)
+```
+
+`Formatter` is a `Disposable` that can be registered to `nova.subscriptions`.
+
 ## Readme
 
 A Nova extension must provide a Readme file.

@@ -2,7 +2,7 @@
   inputs = {
     utils.url   = "github:numtide/flake-utils";
     nova        = {
-      url   = "https://download.panic.com/nova/Nova%2010.zip";
+      url   = "https://download.panic.com/nova/Nova%2010.3.zip";
       flake = false;
     };
   };
@@ -27,27 +27,21 @@
           BUILD_FLAGS=( -arch arm64 -arch x86_64 -mmacosx-version-min=11.0 -Isrc -Wall -Wextra )
           LDFLAGS=( ''${BUILD_FLAGS[@]} -F$FRAMEWORKS_PATH -framework SyntaxKit -rpath @loader_path/../Frameworks )
           LINKSHARED=(-dynamiclib -Wl,-install_name,libtree-sitter-${langName}.dylib,-rpath,@executable_path/../Frameworks)
-          echo cpp
           CPPSRC=()
           SRC=()
           KNOWN_NAMES=(parser scanner)
           for name in "''${KNOWN_NAMES[@]}"; do
-            echo infor
             if [[ -f "$srcPath/$name.c" ]]; then
               SRC+=( $name )
             fi
-            echo forsrc
             if [[ -f "$srcPath/$name.cc" ]]; then
               CPPSRC+=( $name )
             fi
-            echo forcppsrc
           done
           if (( ''${#CPPSRC[@]} )); then
             LDFLAGS+=( -lc++ )
           fi
-          echo lc++
           OBJ=()
-          echo obj
           for f in ''${SRC[@]}; do
             /usr/bin/clang -c ''${BUILD_FLAGS[@]} -o $f.o $srcPath/$f.c
             OBJ+=( $f.o )
@@ -147,7 +141,7 @@
             cp ${self}/Scripts/config-item.js $extDir/Scripts
             printenv CONFIG_JS >$extDir/Scripts/config.js
           '' else ""}
-          cp ${self}/Scripts/language-server.js $extDir/Scripts
+          cp ${self}/Scripts/{language-server,formatter}.js $extDir/Scripts
           runHook postInstall
         '';
       } // derivationParams);

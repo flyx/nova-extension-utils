@@ -8,7 +8,7 @@ class LanguageServer {
     this.start();
   }
     
-  deactivate() {
+  dispose() {
     this.stop();
   }
     
@@ -28,11 +28,11 @@ class LanguageServer {
     });
     proc.onDidExit((status) => {
       if (status == 0) {
-        var serverOptions = {
+        let serverOptions = {
           path: absPath,
           args: [],
         };
-        var client = new LanguageClient(
+        let client = new LanguageClient(
           this.identifier + ".client",
           path,
           serverOptions,
@@ -43,8 +43,6 @@ class LanguageServer {
           client.start();
           if (nova.inDevMode()) console.log(`[${this.identifier}] started language server: ${absPath}`);
           
-          // Add the client to the subscriptions to be cleaned up
-          nova.subscriptions.add(client);
           this.languageClient = client;
         } catch (err) {
           console.error(`[${this.identifier}] while trying to start ${absPath}:`, err)
@@ -59,7 +57,6 @@ class LanguageServer {
   stop() {
     if (this.languageClient) {
       this.languageClient.stop();
-      nova.subscriptions.remove(this.languageClient);
       this.languageClient = null;
     }
   }
