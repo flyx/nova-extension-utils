@@ -1,27 +1,28 @@
+// code formatting support
+// part of nova-extension-utils
+
 const ConfigItem = require("config-item.js").ConfigItem;
 
 class Formatter {
   /// Will register a command with id `identifier` with Nova.
   /// The given identifier should start with your extension's identifier.
   ///
-  /// `path` may be either a string or a ConfigItem with type path.
-  /// it specifies the path to the executable doing the formatting.
+  /// `path` must be resolvable via ConfigItem.process to a string.
+  /// This parameter specifies the path to the executable doing the formatting.
   ///
-  /// `syntaxes` must be a string array containing all syntax names for
-  /// which this formatter should be used.
+  /// `args` must be resolvable via ConfigItem.process to an array of strings.
+  /// This parameter defines the arguments passed to the formatter.
   ///
-  /// `args` must be a either a string array or a ConfigItem returning a string array.
-  /// it defines the arguments passed to the formatter.
-  /// the arguments must tell the formatter to take input from stdin and write output to stdout.
+  /// `syntaxes` must be resolvable via ConfigItem.process to a string array.
+  /// The formatter will format only files whose syntax is contained in this array.
   ///
-  /// `autoFormatCfg` may be a ConfigItem or null.
-  /// The formatter will auto-format files before saving if this is a ConfigItem
-  /// and the ConfigItem's value is true.
-  constructor(identifier, path, args, syntaxes, autoFormatCfg) {
+  /// `autoFormat` may be null/undefined. If not, it must be resolvable to a boolean value.
+  /// The formatter will auto-format files before saving if `autoFormat` is set and resolves to true.
+  constructor(identifier, path, args, syntaxes, autoFormat) {
     this.path = path;
     this.args = args;
     this.syntaxes = syntaxes;
-    this.autoFormatCfg = autoFormatCfg;
+    this.autoFormat = autoFormat;
     
     this.command = nova.commands.register(
       identifier, this.formatDocument, this
@@ -31,7 +32,7 @@ class Formatter {
     this.callbacks.push(nova.workspace.onDidAddTextEditor((editor) => {
       this.callbacks.push(
         editor.onWillSave(async (textEditor) => {
-          if (this.autoFormatCfg && this.autoFormatCfg.value()) {
+          if (ConfigItem.process(this.autoFormat)) {
             await nova.commands.invoke(identifier, textEditor);
           }
         })
@@ -51,16 +52,15 @@ class Formatter {
     // if b is set, a is the workspace.
     const editor = b ? b : a;
     const doc = editor.document;
-    if (this.syntaxes.includes(doc.syntax)) {
-      const formatter = (
-        this.path instanceof ConfigItem ? this.path.value() : this.path
-      );
+    const syntaxes = ConfigItem.process(this.syntaxes);
+    if (syntaxes.includes(doc.syntax)) {
+      const formatter = ConfigItem.process(this.path);
       const process = new Process("/usr/bin/env", {
         cwd: nova.workspace.path,
         stdio: "pipe",
         args: [
           formatter,
-          ...(this.args instanceof ConfigItem ? this.args.value() : this.args)
+          ...(ConfigItem.process(this.args))
         ],
       });
       process.onStderr((line) => console.error(`[${formatter}] ${line}`));

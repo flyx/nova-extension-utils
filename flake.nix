@@ -79,33 +79,35 @@
         # derivations built via buildNovaTreeSitterLib
         treeSitterLibs ? [ ],
         # configuration options of your extension
-        config ? { },
+        config ? [ ],
         # workspace-only configuration options
-        configWorkspace ? { },
+        configWorkspace ? [ ],
         # additional parameters to mkDerivation
         derivationParams ? { },
         # additional attributes get put into the extension.json file
         ... }@args:
         let
-          genConfigItem = workspace: name: value:
-            {
-              key = identifier + "." + name;
+          genConfigItem = path: workspace: value:
+            let fieldPath = "${path}.${value.name}";
+            in {
+              key = fieldPath;
             } // (if value.type == "section" then
-              ((builtins.removeAttrs value [ "children" ]) // {
+              ((builtins.removeAttrs value [ "children" "name" ]) // {
                 children =
-                  final.lib.mapAttrsToList genConfigItem value.children;
+                  builtins.map (genConfigItem fieldPath workspace) value.children;
               })
             else
               (if workspace then
-                ((builtins.removeAttrs value [ "default" "required" ]) // {
+                ((builtins.removeAttrs value [ "name" "default" "required" ]) // {
                   required = false;
                 })
               else
                 value));
-          configJson = final.lib.mapAttrsToList (genConfigItem false) config;
+          configJson =
+            builtins.map (genConfigItem identifier false) config;
           workspaceConfigJson =
-            (final.lib.mapAttrsToList (genConfigItem true) config)
-            ++ (final.lib.mapAttrsToList (genConfigItem false) configWorkspace);
+            (builtins.map (genConfigItem identifier true) config)
+            ++ (builtins.map (genConfigItem identifier false) configWorkspace);
           pname = final.lib.strings.sanitizeDerivationName name;
         in final.stdenvNoCC.mkDerivation ({
           inherit src pname version;
@@ -125,7 +127,7 @@
           });
           CONFIG_JS = import ./Scripts/config.nix {
             inherit (final) lib;
-            inherit config;
+            inherit config configWorkspace;
             basePath = identifier;
           };
 
@@ -149,7 +151,7 @@
             ${final.lib.concatStrings (builtins.map (tsl: ''
               cp ${tsl} $extDir/Syntaxes/libtree-sitter-${tsl.langName}.dylib
             '') treeSitterLibs)}
-            ${if builtins.length (builtins.attrValues config) > 0 then ''
+            ${if builtins.length (config ++ configWorkspace) > 0 then ''
               cp ${self}/Scripts/config-item.js $extDir/Scripts
               printenv CONFIG_JS >$extDir/Scripts/config.js
             '' else
