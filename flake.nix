@@ -87,26 +87,28 @@
         # additional attributes get put into the extension.json file
         ... }@args:
         let
+          filterConfigItems = item: if item ? noWorkspace then !item.noWorkspace else true;
           genConfigItem = path: workspace: value:
             let fieldPath = "${path}.${value.name}";
             in {
               key = fieldPath;
             } // (if value.type == "section" then
-              ((builtins.removeAttrs value [ "children" "name" ]) // {
+              ((builtins.removeAttrs value [ "children" "name" "noWorkspace" ]) // {
                 children =
-                  builtins.map (genConfigItem fieldPath workspace) value.children;
+                  builtins.map (genConfigItem fieldPath workspace)
+                    (if workspace then (builtins.filter filterConfigItems value.children) else value.children);
               })
             else
               (if workspace then
-                ((builtins.removeAttrs value [ "name" "default" "required" ]) // {
+                ((builtins.removeAttrs value [ "name" "default" "required" "noWorkspace" ]) // {
                   required = false;
                 })
               else
-                value));
+                (builtins.removeAttrs value [ "noWorkspace" ])));
           configJson =
             builtins.map (genConfigItem identifier false) config;
           workspaceConfigJson =
-            (builtins.map (genConfigItem identifier true) config)
+            (builtins.map (genConfigItem identifier true) (builtins.filter filterConfigItems config))
             ++ (builtins.map (genConfigItem identifier false) configWorkspace);
           pname = final.lib.strings.sanitizeDerivationName name;
         in final.stdenvNoCC.mkDerivation ({

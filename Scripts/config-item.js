@@ -4,6 +4,9 @@
 /// a config item that can be set globally and overridden per workspace.
 /// has a listener interface that fires when the resulting value changes.
 class ConfigItem {
+  static workspaceOnly = 1;
+  static globalOnly = 2;
+  
   changedGlobal(newVal, oldVal) {
     if (this.callback) this.callback.call(this.callbackThis, newVal, oldVal);
   }
@@ -12,11 +15,17 @@ class ConfigItem {
     if (this.callback) this.callback.call(this.callbackThis, newVal, oldVal);
   }
   
-  constructor(key, workspaceOnly) {
+  constructor(key, flag) {
     this.key = key;
-    this.workspaceOnly = workspaceOnly;
-    if (!workspaceOnly) nova.config.onDidChange(key, this.changedGlobal, this);
-    nova.workspace.config.onDidChange(key, this.changedWorkspace, this);
+    if (flag) {
+      this.workspace = flag == ConfigItem.workspaceOnly;
+      this.global    = flag == ConfigItem.globalOnly;
+    } else {
+      this.workspace = true;
+      this.global    = true;
+    }
+    if (this.global)    nova.config.onDidChange(key, this.changedGlobal, this);
+    if (this.workspace) nova.workspace.config.onDidChange(key, this.changedWorkspace, this);
   }
   
   onDidChange(callback, thisValue) {
@@ -30,8 +39,8 @@ class ConfigItem {
   }
   
   value() {
-    const wsVal = nova.workspace.config.get(this.key);
-    return (wsVal === null && !this.workspaceOnly) ? nova.config.get(this.key) : wsVal;
+    const wsVal = (this.workspace) ? nova.workspace.config.get(this.key) : null;
+    return (wsVal === null && this.global) ? nova.config.get(this.key) : wsVal;
   }
   
   /// This is an abstraction over ConfigItem and literal values.

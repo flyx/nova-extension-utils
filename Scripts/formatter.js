@@ -62,6 +62,7 @@ class Formatter {
           formatter,
           ...(ConfigItem.process(this.args))
         ],
+        shell: true,
       });
       process.onStderr((line) => console.error(`[${formatter}] ${line}`));
       
