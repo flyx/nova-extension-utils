@@ -142,11 +142,11 @@
               if [[ -d "$f" ]]; then cp -r "$f" $extDir; fi
             done
             if [[ -f Readme-user.md ]]; then
-              cp Readme-user.md $extDir/Readme.md
+              cp Readme-user.md $extDir/README.md
             elif [[ -f Readme.md ]]; then
-              cp Readme.md $extDir/Readme.md
+              cp Readme.md $extDir/README.md
             fi
-            cp Changelog.md $extDir/Changelog.md
+            cp Changelog.md $extDir/CHANGELOG.md
             shopt -u nullglob
             printenv EXTENSION_JSON >$extDir/extension.json
             mkdir -p $extDir/Syntaxes $extDir/Scripts
